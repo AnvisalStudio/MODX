@@ -60,10 +60,8 @@ mkdir -p /tmp/modx_src
 cd /tmp
 
 # =========================
-# 3. DOWNLOAD MODX (STABLE RELEASE)
+# 3. DOWNLOAD MODX (FIXED SOURCE)
 # =========================
-
-set -e
 
 cd /tmp
 
@@ -72,11 +70,7 @@ URL="https://github.com/AnvisalStudio/MODX/releases/download/modx-${MODX_VERSION
 echo "📦 Download MODX: ${MODX_VERSION}"
 echo "🔗 $URL"
 
-curl -fL \
-  --retry 3 \
-  --retry-delay 2 \
-  -A "Mozilla/5.0" \
-  -o modx.zip "$URL"
+wget -q --show-progress -O modx.zip "$URL"
 
 # check download
 if [ ! -s modx.zip ]; then
@@ -87,14 +81,10 @@ fi
 # verify zip signature
 head -c 2 modx.zip | grep -q "PK" || {
   echo "❌ INVALID ZIP (not a real archive)"
-  file modx.zip
-  head modx.zip
   exit 1
 }
 
 echo "✅ ZIP OK"
-
-unzip -q modx.zip
 
 # =========================
 # EXTRACT

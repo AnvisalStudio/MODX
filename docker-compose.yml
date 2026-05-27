@@ -70,7 +70,7 @@ services:
       retries: 30
     networks:
       - modx_net
-  
+
   mysql-backup:
     image: mysql:8.0
     container_name: ${PROJECT_NAME}_mysql_backup
@@ -82,27 +82,40 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-    entrypoint: /bin/bash -c
-    command: >
-      "while true; do
-        echo '💾 Running DB backup...';
 
-        mysqldump -h db -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE \
-          --single-transaction --quick --lock-tables=false \
-          | gzip > /backup/backup_$(date +%F_%H-%M-%S).sql.gz;
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        set -eu
 
-        find /backup -type f -name '*.sql.gz' -mtime +7 -delete;
+        echo "💾 backup service started"
 
-        echo '✅ Backup done';
-        sleep 86400;
-      done"
-    networks:
-      - modx_net
+        while true; do
+          TS=$(date +%F_%H-%M-%S)
+          FILE="/backup/backup_${TS}.sql.gz"
 
-  redis:
-    image: redis:7-alpine
-    container_name: ${PROJECT_NAME}_redis
-    command: redis-server --appendonly yes
+          echo "💾 backup start: $TS"
+
+          MYSQL_PWD="$MYSQL_PASSWORD" mysqldump \
+            -h db \
+            -u "$MYSQL_USER" \
+            "$MYSQL_DATABASE" \
+            --single-transaction \
+            --quick \
+            --lock-tables=false \
+            --skip-column-statistics \
+            --column-statistics=0 \
+          | gzip > "$FILE"
+
+          echo "saved: $FILE"
+
+          find /backup -type f -name "*.sql.gz" -mtime +7 -delete
+
+          echo "done"
+          sleep 86400
+        done
+
     networks:
       - modx_net
 

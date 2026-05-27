@@ -4,3 +4,10 @@
 *.crt
 *.csr
 *.logxw
+/backups/
+/modx/core/cache/
+/modx/core/packages/
+/modx/connectors/
+/modx/manager/
+/node_modules/
+.env

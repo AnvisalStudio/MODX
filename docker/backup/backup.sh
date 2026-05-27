@@ -1,19 +1,17 @@
 #!/bin/sh
 
-while true; do
-  echo "💾 backup..."
+FILE="/backup/backup_$(date +%F_%H-%M-%S).sql.gz"
 
-  MYSQL_PWD=$MYSQL_PASSWORD mysqldump \
-    -h db \
-    -u $MYSQL_USER \
-    $MYSQL_DATABASE \
-    --single-transaction \
-    --quick \
-    --lock-tables=false \
-    | gzip > /backup/backup_$(date +%F_%H-%M-%S).sql.gz
+MYSQL_PWD="$MYSQL_PASSWORD" mysqldump \
+  -h db \
+  -u "$MYSQL_USER" \
+  "$MYSQL_DATABASE" \
+  --single-transaction \
+  --quick \
+  --lock-tables=false \
+  --column-statistics=0 \
+| gzip > "$FILE"
 
-  find /backup -type f -name "*.sql.gz" -mtime +7 -delete
+echo "backup saved: $FILE"
 
-  echo "done"
-  sleep 86400
-done
+find /backup -type f -name "*.sql.gz" -mtime +7 -delete
